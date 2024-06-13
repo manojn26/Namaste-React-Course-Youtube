@@ -1,13 +1,65 @@
-import React from 'react'
-import { useDispatch } from "react-redux"
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from "react-redux"
 import { toggleMenu } from "../utils/appSlice"
+import { YOUTUBE_SEARCH_API } from "../utils/constant"
+import { cacheResults } from '../utils/searchSlice'
 
 const Head = () => {
+
+    const [searchQuery, setSearchQuery] = useState("")
+    const [suggestions, setSuggestions] = useState([])
+    const [showsuggestions, setShowSuggestions] = useState(false)
+
+    const searchCache = useSelector(store => store.search)
     const dispatch = useDispatch()
+
+
+    useEffect(() => {
+
+        // make an API call after evry key press
+        // but if the difference between 2 API call is < 200ms
+        // decline the API call
+
+        const timer = setTimeout(() => {
+
+            if (searchCache[searchQuery]) {
+                setSuggestions(searchCache[searchQuery])
+            } else {
+                getSearchSugestions()
+            }
+
+        }, 200)
+
+        return () => {
+            clearTimeout(timer)
+        }
+
+    }, [searchQuery])
+
+
+    const getSearchSugestions = async () => {
+        console.log(searchQuery);
+        const data = await fetch(YOUTUBE_SEARCH_API + searchQuery)
+        const jsonData = await data.json()
+
+
+
+        setSuggestions(jsonData[1])
+        // update cache
+        dispatch(cacheResults({
+            [searchQuery]: jsonData[1]
+        }))
+        // console.log(jsonData[1]);
+    }
+
+
     const toggleMenuHandler = () => {
         dispatch(toggleMenu())
 
     }
+
+
+
     return (
         <div className='grid grid-flow-col p-5 m-2 shadow-lg'>
             <div className='flex col-span-1'>
@@ -20,8 +72,36 @@ const Head = () => {
             </div>
 
             <div className='flex col-span-10 justify-center'>
-                <input className='w-1/2 border border-gray-400  rounded-l-full' type="text" placeholder='Search...' />
-                <button className='border border-gray-400 px-5 rounded-r-full bg-gray-100'>🔍</button>
+                <div className='flex flex-col w-3/4'>
+                    <div className=''>
+                        <input
+                            className='w-3/4 p-2 border border-gray-400  rounded-l-full'
+                            type="text"
+                            placeholder='Search...'
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setShowSuggestions(false)}
+                        />
+                        <button className='border border-gray-400 py-2 px-5 rounded-r-full bg-gray-100'>🔍</button>
+                    </div>
+
+                    {
+                        showsuggestions ? <div className='fixed bg-white py-2 px-2  mt-12 w-[29rem] shadow-lg rounded-lg border border-gray-100'>
+
+                            <ul>
+                                {
+                                    suggestions.map(s => <li key={s} className='py-2 shadow-sm hover:bg-gray-100 cursor-pointer'>🔎 {s}</li>)
+                                }
+
+                            </ul>
+                        </div> : null
+                    }
+
+
+
+
+                </div>
             </div>
 
             <div className='flex col-span-1 justify-center'>
