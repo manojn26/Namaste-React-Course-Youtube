@@ -5,6 +5,8 @@ import store from "./utils/store";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import MainContainer from "./components/MainContainer";
 import WatchPage from "./components/WatchPage";
+import Demo from "./components/Demo";
+import Demo2 from "./components/Demo2";
 
 const appRouter = createBrowserRouter([
   {
@@ -19,11 +21,23 @@ const appRouter = createBrowserRouter([
         path: "/watch",
         element: <WatchPage />,
       },
+      {
+        path: "/demo",
+        element: (
+          <>
+            <Demo />
+            <Demo2 />
+          </>
+        ),
+      },
     ],
   },
 ]);
 
 function App() {
+  window.addEventListener("scroll", () => {
+    console.log("Scrolling");
+  });
   return (
     <Provider store={store}>
       <div>
@@ -38,8 +52,6 @@ function App() {
               Tag Buttons
             Video Container
               Video Cart
-            
-
       */}
       </div>
     </Provider>
